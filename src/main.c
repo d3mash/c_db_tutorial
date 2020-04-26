@@ -145,7 +145,7 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement)
   return PREPARE_UNRECOGNIZED_STATEMENT;
 }
 
-void print_prompt() { printf("db> "); }
+void print_prompt() { printf("db > "); }
 
 void read_input(InputBuffer* input_buffer) {
   ssize_t bytes_read =
