@@ -77,7 +77,6 @@ void* row_slot(Table* table, uint32_t row_num) {
   uint32_t page_num = row_num / ROWS_PER_PAGE;
   void* page = table->pages[page_num];
   if (page == NULL) {
-    // Do not allocate memory if we're not accessing a page
     page = table->pages[page_num] = malloc(PAGE_SIZE);
   }
   uint32_t row_offset = row_num % ROWS_PER_PAGE;
@@ -200,8 +199,8 @@ int main(int argc, char* argv[]) {
     print_prompt();
     read_input(input_buffer);
 
-    if (strcmp(input_buffer->buffer, ".exit") == 0) {
-      switch(do_meta_command(input_buffer, table)) {
+    if (input_buffer->buffer[0] == '.') {
+      switch (do_meta_command(input_buffer, table)) {
       case (META_COMMAND_SUCCESS):
         continue;
       case (META_COMMAND_UNRECOGNIZED_COMMAND):
@@ -211,26 +210,25 @@ int main(int argc, char* argv[]) {
     }
 
     Statement statement;
-    switch(prepare_statement(input_buffer, &statement)) {
+    switch (prepare_statement(input_buffer, &statement)) {
     case (PREPARE_SUCCESS):
       break;
     case (PREPARE_SYNTAX_ERROR):
       printf("Syntax error. Could not parse statement.\n");
       continue;
     case (PREPARE_UNRECOGNIZED_STATEMENT):
-      printf("Unrecognized keyword at start of '%S'.\n",
+      printf("Unrecognized keyword at start of '%s'.\n",
              input_buffer->buffer);
       continue;
     }
 
-    execute_statement(&statement, table);
-    switch(execute_statement(&statement, table)) {
+    switch (execute_statement(&statement, table)) {
     case (EXECUTE_SUCCESS):
-      printf("Execute.\n");
-      break;
+	    printf("Executed.\n");
+	    break;
     case (EXECUTE_TABLE_FULL):
-      printf("Error: Table full.\n");
-      break;
+	    printf("Error: Table full.\n");
+	    break;
     }
   }
 }
