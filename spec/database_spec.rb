@@ -49,4 +49,21 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
       expect(execute_commands[-2]).to eq(expected_error_message)
     end
   end
+
+  context 'when attempting to inset string of a maximum length' do
+    let(:long_username) { 'a' * 32 }
+    let(:long_email) { 'a' * 255 }
+    let(:commands) do
+      [
+        "insert 1 #{long_username} #{long_email}",
+        'select',
+        '.exit'
+      ]
+    end
+    let(:expected_result) { "db > (1, #{long_username}, #{long_email})" }
+
+    it 'inserts it corectly and returns it after select' do
+      expect(execute_commands).to include(expected_result)
+    end
+  end
 end
