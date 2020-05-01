@@ -1,9 +1,13 @@
 # frozen_string_literal: true
 
 describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
+  before do
+    `rm -rf test.db`
+  end
+
   subject(:execute_commands) do
     output = nil
-    IO.popen('./db.out', 'r+') do |pipe|
+    IO.popen('./db.out test.db', 'r+') do |pipe|
       commands.each do |command|
         pipe.puts(command)
       end
@@ -97,6 +101,26 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
 
     it 'displays a relevant error message' do
       expect(execute_commands).to include(expected_error_message)
+    end
+  end
+
+  context 'when records were already inserted' do
+    let!(:commands) do
+      [
+        'insert 1 demash dem@a.sh',
+        'select',
+        '.exit'
+      ]
+    end
+    let(:expected_output) { 'db > (1, demash, dem@a.sh)' }
+
+    before { execute_commands }
+
+    it 'keeps data after closing the connection to database' do
+      commands = ['select', '.exit']
+
+      result = execute_commands
+      expect(result).to include(expected_output)
     end
   end
 end
