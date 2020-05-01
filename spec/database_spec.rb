@@ -66,4 +66,37 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
       expect(execute_commands).to include(expected_result)
     end
   end
+
+  context 'when attempting to inset string beyond maximum length' do
+    let(:long_username) { 'a' * 33 }
+    let(:long_email) { 'a' * 256 }
+    let(:commands) do
+      [
+        "insert 1 #{long_username} #{long_email}",
+        'select',
+        '.exit'
+      ]
+    end
+
+    let(:expected_error_message) { 'db > String is too long.' }
+
+    it 'displays a relevant error message' do
+      expect(execute_commands).to include(expected_error_message)
+    end
+  end
+
+  context 'when inserted ID is negative' do
+    let(:commands) do
+      [
+        'insert -1 demash dem@a.sh',
+        'select',
+        '.exit'
+      ]
+    end
+    let(:expected_error_message) { 'db > ID must be positive.' }
+
+    it 'displays a relevant error message' do
+      expect(execute_commands).to include(expected_error_message)
+    end
+  end
 end
