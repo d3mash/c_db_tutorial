@@ -3,3 +3,6 @@ compile_db:
 
 test:
 	bundle exec rspec
+
+run:
+	./db.out db_data_file
