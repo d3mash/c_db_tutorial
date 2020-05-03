@@ -140,7 +140,7 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
     end
 
     it 'prints constants' do
-      expect(result).to match_array(expected_result)
+      expect(execute_commands).to match_array(expected_result)
     end
   end
 
@@ -148,12 +148,12 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
     let(:commands) do
       [3, 1, 2].map do |i|
         "insert #{i} user#{i} email#{i}@example.com"
-      end + ['.btree', 'exit']
+      end + ['.btree', '.exit']
     end
 
     let(:expected_result) do
       [
-        'db >Executed.',
+        'db > Executed.',
         'db > Executed.',
         'db > Executed.',
         'db > Tree:',
@@ -166,7 +166,7 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
     end
 
     it 'displays the tree' do
-      expect(result).to match_array(expected_result)
+      expect(execute_commands).to match_array(expected_result)
     end
   end
 end
