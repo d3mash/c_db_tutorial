@@ -123,4 +123,50 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
       expect(result).to include(expected_output)
     end
   end
+
+  context 'when attempting to print constants' do
+    let(:commands) { ['.constants', '.exit'] }
+    let(:expected_result) do
+      [
+        'db > Constants:',
+        'ROW_SIZE: 293',
+        'COMMON_NODE_HEADER_SIZE: 6',
+        'LEAF_NODE_HEADER_SIZE: 10',
+        'LEAF_NODE_CELL_SIZE: 297',
+        'LEAF_NODE_SPACE_FOR_CELLS: 4086',
+        'LEAF_NODE_MAX_CELLS: 13',
+        'db > '
+      ]
+    end
+
+    it 'prints constants' do
+      expect(result).to match_array(expected_result)
+    end
+  end
+
+  context 'when attempting to display a tree' do
+    let(:commands) do
+      [3, 1, 2].map do |i|
+        "insert #{i} user#{i} email#{i}@example.com"
+      end + ['.btree', 'exit']
+    end
+
+    let(:expected_result) do
+      [
+        'db >Executed.',
+        'db > Executed.',
+        'db > Executed.',
+        'db > Tree:',
+        'leaf (size 3)',
+        '  - 0 : 3',
+        '  - 1 : 1',
+        '  - 2 : 2',
+        'db > '
+      ]
+    end
+
+    it 'displays the tree' do
+      expect(result).to match_array(expected_result)
+    end
+  end
 end
