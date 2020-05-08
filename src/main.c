@@ -13,11 +13,7 @@ typedef struct {
   ssize_t input_length;
 } InputBuffer;
 
-typedef enum {
-  EXECUTE_SUCCESS,
-  EXECUTE_TABLE_FULL,
-  EXECUTE_DUPLICATE_KEY,
-} ExecuteResult;
+typedef enum { EXECUTE_SUCCESS, EXECUTE_DUPLICATE_KEY, EXECUTE_TABLE_FULL } ExecuteResult;
 
 typedef enum {
   META_COMMAND_SUCCESS,
@@ -86,16 +82,6 @@ const uint32_t LEAF_NODE_CELL_SIZE = LEAF_NODE_KEY_SIZE + LEAF_NODE_VALUE_SIZE;
 const uint32_t LEAF_NODE_SPACE_FOR_CELLS = PAGE_SIZE - LEAF_NODE_HEADER_SIZE;
 const uint32_t LEAF_NODE_MAX_CELLS = LEAF_NODE_SPACE_FOR_CELLS / LEAF_NODE_CELL_SIZE;
 
-NodeType get_node_type(void* node) {
-  uint8_t value = *((uint8_t*)(node + NODE_TYPE_OFFSET));
-  return (NodeType)value;
-}
-
-void set_node_type(void* node, NodeType type) {
-  uint8_t value = type;
-  *((uint8_t*)(node + NODE_TYPE_OFFSET)) = value;
-}
-
 uint32_t* leaf_node_num_cells(void* node) {
   return node + LEAF_NODE_NUM_CELLS_OFFSET;
 }
@@ -110,6 +96,16 @@ uint32_t* leaf_node_key(void* node, uint32_t cell_num) {
 
 void* leaf_node_value(void* node, uint32_t cell_num) {
   return leaf_node_cell(node, cell_num) + LEAF_NODE_KEY_SIZE;
+}
+
+NodeType get_node_type(void* node) {
+  uint8_t value = *((uint8_t*)(node + NODE_TYPE_OFFSET));
+  return (NodeType)value;
+}
+
+void set_node_type(void* node, NodeType type) {
+  uint8_t value = type;
+  *((uint8_t*)(node + NODE_TYPE_OFFSET)) = value;
 }
 
 void initialize_leaf_node(void* node) {
@@ -135,6 +131,7 @@ typedef struct {
   uint32_t cell_num;
   bool end_of_table;
 } Cursor;
+
 
 Pager* pager_open(const char* filename) {
   int fd = open(filename,
@@ -202,19 +199,6 @@ void* get_page(Pager* pager, uint32_t page_num) {
   return pager->pages[page_num];
 }
 
-Cursor* table_start(Table* table) {
-  Cursor* cursor = malloc(sizeof(Cursor));
-  cursor->table = table;
-  cursor->page_num = table->root_page_num;
-  cursor->cell_num = 0;
-
-  void* root_node = get_page(table->pager, table->root_page_num);
-  uint32_t num_cells = *leaf_node_num_cells(root_node);
-  cursor->end_of_table = (num_cells == 0);
-
-  return cursor;
-}
-
 Cursor* leaf_node_find(Table* table, uint32_t page_num, uint32_t key) {
   void* node = get_page(table->pager, page_num);
   uint32_t num_cells = *leaf_node_num_cells(node);
@@ -223,6 +207,7 @@ Cursor* leaf_node_find(Table* table, uint32_t page_num, uint32_t key) {
   cursor->table = table;
   cursor->page_num = page_num;
 
+  // Binary search
   uint32_t min_index = 0;
   uint32_t one_past_max_index = num_cells;
   while (one_past_max_index != min_index) {
@@ -253,6 +238,19 @@ Cursor* table_find(Table* table, uint32_t key) {
     printf("Need to implement searching an internal node\n");
     exit(EXIT_FAILURE);
   }
+}
+
+Cursor* table_start(Table* table) {
+  Cursor* cursor = malloc(sizeof(Cursor));
+  cursor->table = table;
+  cursor->page_num = table->root_page_num;
+  cursor->cell_num = 0;
+
+  void* root_node = get_page(table->pager, table->root_page_num);
+  uint32_t num_cells = *leaf_node_num_cells(root_node);
+  cursor->end_of_table = (num_cells == 0);
+
+  return cursor;
 }
 
 void pager_flush(Pager* pager, uint32_t page_num) {
@@ -494,15 +492,15 @@ ExecuteResult execute_insert(Statement* statement, Table* table) {
   }
 
   Row* row_to_insert = &(statement->row_to_insert);
-  uint32_t key_to_insert = row_to_insert->id;
-  Cursor* cursor = table_find(table, key_to_insert);
+    uint32_t key_to_insert = row_to_insert->id;
+    Cursor* cursor = table_find(table, key_to_insert);
 
-  if (cursor->cell_num < num_cells) {
-    uint32_t key_at_index = *leaf_node_key(node, cursor->cell_num);
-    if (key_at_index == key_to_insert) {
-      return EXECUTE_DUPLICATE_KEY;
+    if (cursor->cell_num < num_cells) {
+      uint32_t key_at_index = *leaf_node_key(node, cursor->cell_num);
+      if (key_at_index == key_to_insert) {
+        return EXECUTE_DUPLICATE_KEY;
+      }
     }
-  }
 
   leaf_node_insert(cursor, row_to_insert->id, row_to_insert);
 
