@@ -146,7 +146,7 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
 
   context 'when attempting to display a tree' do
     let(:commands) do
-      [3, 1, 2].map do |i|
+      [1, 2, 3].map do |i|
         "insert #{i} user#{i} email#{i}@example.com"
       end + ['.btree', '.exit']
     end
