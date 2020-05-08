@@ -146,7 +146,7 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
 
   context 'when attempting to display a tree' do
     let(:commands) do
-      [3, 1, 2].map do |i|
+      [1, 2, 3].map do |i|
         "insert #{i} user#{i} email#{i}@example.com"
       end + ['.btree', '.exit']
     end
@@ -158,15 +158,31 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
         'db > Executed.',
         'db > Tree:',
         'leaf (size 3)',
-        '  - 0 : 3',
-        '  - 1 : 1',
-        '  - 2 : 2',
+        '  - 0 : 1',
+        '  - 1 : 2',
+        '  - 2 : 3',
         'db > '
       ]
     end
 
     it 'displays the tree' do
       expect(execute_commands).to match_array(expected_result)
+    end
+  end
+
+  context 'when attempting to insert duplicated key' do
+    let(:commands) do
+      ['insert 1 name email', 'insert 1 name email', 'select', 'exit']
+    end
+
+    let(:expected_result) do
+      [
+        'db > Executed.',
+        'db > Error: Duplicate key.',
+        'db > (1, user1, person1@example.com)',
+        'Executed.',
+        'db > '
+      ]
     end
   end
 end
