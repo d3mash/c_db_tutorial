@@ -157,10 +157,10 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
         'db > Executed.',
         'db > Executed.',
         'db > Tree:',
-        'leaf (size 3)',
-        '  - 0 : 1',
-        '  - 1 : 2',
-        '  - 2 : 3',
+        '- leaf (size 3)',
+        '  - 1',
+        '  - 2',
+        '  - 3',
         'db > '
       ]
     end
@@ -183,6 +183,42 @@ describe 'Our simple database' do # rubocop:disable Metrics/BlockLength
         'Executed.',
         'db > '
       ]
+    end
+  end
+
+  context 'when printing a 3-leaf node btree' do
+    let(:commands) do
+      (1..14).map { |i| "insert #{i} user#{i} person#{i}@example.com" } +
+        ['.btree', 'insert 15 user15 person15@example.com', '.exit']
+    end
+    let(:expected_result) do
+      [
+        'db > Tree:',
+        '- internal (size 1)',
+        ' - leaf (size 7)',
+        '  - 1',
+        '  - 2',
+        '  - 3',
+        '  - 4',
+        '  - 5',
+        '  - 6',
+        '  - 7',
+        '  - key 7',
+        ' - leaf (size 7)',
+        '  - 8',
+        '  - 9',
+        '  - 10',
+        '  - 11',
+        '  - 12',
+        '  - 13',
+        '  - 14',
+        'db > Need to implement searching an internal node'
+      ]
+    end
+
+    it 'prints it out' do
+      expect(execute_commands[14...(execute_commands.length)]).
+        to match_array(expected_result)
     end
   end
 end
